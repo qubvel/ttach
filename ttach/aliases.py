@@ -23,11 +23,6 @@ def d4_transform():
         ]
     )
 
-
-def rotate90_transform(angles):
-    return Compose([tta.Rotate90(angles)])
-
-
 def multiscale_transform(scales, interpolation="nearest"):
     return Compose([tta.Scale(scales, interpolation=interpolation)])
 
