@@ -1,0 +1,11 @@
+FROM  anibali/pytorch:no-cuda
+
+# install requirements
+RUN pip install pytest
+
+# copy project
+COPY . /project
+WORKDIR /project
+
+# install project
+RUN pip install .
