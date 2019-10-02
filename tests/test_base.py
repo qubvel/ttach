@@ -26,3 +26,23 @@ def test_compose_1():
         deaugmented_label = augmenter.deaugment_label(model_output["label"])
         assert torch.allclose(deaugmented_mask, dummy_image)
         assert torch.allclose(deaugmented_label, dummy_label)
+
+
+@pytest.mark.parametrize(
+    "case",
+    [
+        ("mean", 0.5),
+        ("gmean", 0.0),
+        ("max", 1.0),
+        ("min", 0.0),
+        ("sum", 1.5),
+        ("tsharpen", 0.56903558),
+    ],
+)
+def test_merger(case):
+    merge_type, output = case
+    input = [1.0, 0.0, 0.5]
+    merger = tta.base.Merger(type=merge_type, n=len(input))
+    for i in input:
+        merger.append(torch.tensor(i))
+    assert torch.allclose(merger.result, torch.tensor(output))
