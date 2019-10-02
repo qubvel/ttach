@@ -3,38 +3,47 @@ import torch.nn.functional as F
 
 
 def rot90(x, k=1):
+    """rotate batch of images by 90 degrees k times"""
     return torch.rot90(x, k, (2, 3))
 
 
 def hflip(x):
+    """flip batch of images horizontally"""
     return x.flip(3)
 
 
 def vflip(x):
+    """flip batch of images vertically"""
     return x.flip(2)
 
 
 def sum(x1, x2):
+    """sum of two tensors"""
     return x1 + x2
 
 
 def add(x, value):
+    """add value to tensor"""
     return x + value
 
 
 def max(x1, x2):
+    """compare 2 tensors and take max values"""
     return torch.max(x1, x2)
 
 
 def min(x1, x2):
+    """compare 2 tensors and take min values"""
     return torch.min(x1, x2)
 
 
 def multiply(x, factor):
+    """multiply tensor by factor"""
     return x * factor
 
 
 def scale(x, scale_factor, interpolation="nearest", align_corners=None):
+    """scale batch of images by `scale_factor` with given interpolation mode"""
     h, w = x.shape[2:]
     new_h = int(h * scale_factor)
     new_w = int(w * scale_factor)
@@ -44,28 +53,32 @@ def scale(x, scale_factor, interpolation="nearest", align_corners=None):
 
 
 def crop(x, x_min=None, x_max=None, y_min=None, y_max=None):
+    """perform crop on batch of images"""
     return x[:, :, y_min:y_max, x_min:x_max]
 
 
 def crop_lt(x, crop_h, crop_w):
+    """crop left top corner"""
     return x[:, :, 0:crop_h, 0:crop_w]
 
 
 def crop_lb(x, crop_h, crop_w):
+    """crop left bottom corner"""
     return x[:, :, -crop_h:, 0:crop_w]
 
 
 def crop_rt(x, crop_h, crop_w):
+    """crop right top corner"""
     return x[:, :, 0:crop_h, -crop_w:]
 
 
 def crop_rb(x, crop_h, crop_w):
+    """crop right bottom corner"""
     return x[:, :, -crop_h:, -crop_w:]
 
 
 def center_crop(x, crop_h, crop_w):
-    # assert crop_h % 2 == 0
-    # assert crop_w % 2 == 0
+    """make center crop"""
 
     center_h = x.shape[2] // 2
     center_w = x.shape[3] // 2

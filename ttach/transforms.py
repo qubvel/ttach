@@ -1,9 +1,12 @@
 from functools import partial
+from typing import Optional, List, Union
 from . import functional as F
 from .base import DualTransform, ImageOnlyTransform
 
 
 class HorizontalFlip(DualTransform):
+    """Flip images horizontally (left->right)"""
+
     identity_param = False
 
     def __init__(self):
@@ -24,6 +27,8 @@ class HorizontalFlip(DualTransform):
 
 
 class VerticalFlip(DualTransform):
+    """Flip images vertically (up->down)"""
+
     identity_param = False
 
     def __init__(self):
@@ -44,9 +49,15 @@ class VerticalFlip(DualTransform):
 
 
 class Rotate90(DualTransform):
+    """Rotate images 0/90/180/270 degrees
+
+    Args:
+        angles (list): angles to rotate images
+    """
+
     identity_param = 0
 
-    def __init__(self, angles: list):
+    def __init__(self, angles: List[int]):
         if self.identity_param not in angles:
             angles = [self.identity_param] + list(angles)
 
@@ -64,9 +75,22 @@ class Rotate90(DualTransform):
 
 
 class Scale(DualTransform):
+    """Scale images
+
+    Args:
+        scales (List[Union[int, float]]): scale factors for spatial image dimensions
+        interpolation (str): one of "nearest"/"lenear" (see more in torch.nn.interpolate)
+        align_corners (bool): see more in torch.nn.interpolate
+    """
+
     identity_param = 1
 
-    def __init__(self, scales: list, interpolation="nearest", align_corners=None):
+    def __init__(
+        self,
+        scales: List[Union[int, float]],
+        interpolation: str = "nearest",
+        align_corners: Optional[bool] = None,
+    ):
 
         if self.identity_param not in scales:
             scales = [self.identity_param] + list(scales)
@@ -100,9 +124,16 @@ class Scale(DualTransform):
 
 
 class Add(ImageOnlyTransform):
+    """Add value to images
+
+    Args:
+        values (List[float]): values to add to each pixel
+    """
+
     identity_param = 0
 
-    def __init__(self, values: list):
+    def __init__(self, values: List[float]):
+
         if self.identity_param not in values:
             values = [self.identity_param] + list(values)
         super().__init__("value", values)
@@ -114,9 +145,15 @@ class Add(ImageOnlyTransform):
 
 
 class Multiply(ImageOnlyTransform):
+    """Multiply images by factor
+
+    Args:
+        factors (List[float]): factor to multiply each pixel by
+    """
+
     identity_param = 1
 
-    def __init__(self, factors: list):
+    def __init__(self, factors: List[float]):
         if self.identity_param not in factors:
             factors = [self.identity_param] + list(factors)
         super().__init__("factor", factors)
@@ -128,7 +165,15 @@ class Multiply(ImageOnlyTransform):
 
 
 class FiveCrops(ImageOnlyTransform):
+    """Makes 4 crops for each corner + center crop
+
+    Args:
+        crop_height (int): crop height in pixels
+        crop_width (int): crop width in pixels 
+    """
+
     def __init__(self, crop_height, crop_width):
+
         crop_functions = (
             partial(F.crop_lt, crop_h=crop_height, crop_w=crop_width),
             partial(F.crop_lb, crop_h=crop_height, crop_w=crop_width),
