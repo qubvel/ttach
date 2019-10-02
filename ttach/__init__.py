@@ -5,7 +5,7 @@ from .wrappers import (
 from .base import Compose
 
 from .transforms import (
-    HorizontalFlip, VerticalFlip, Rotate90, Scale, Add, Multiply, FiveCrops
+    HorizontalFlip, VerticalFlip, Rotate90, Scale, Add, Multiply, FiveCrops, Resize
 )
 
 from . import aliases

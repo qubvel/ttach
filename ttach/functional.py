@@ -52,6 +52,11 @@ def scale(x, scale_factor, interpolation="nearest", align_corners=None):
     )
 
 
+def resize(x, size, interpolation="nearest", align_corners=None):
+    """resize batch of images to given spatial size with given interpolation mode"""
+    return F.interpolate(x, size=size, mode=interpolation, align_corners=align_corners)
+
+
 def crop(x, x_min=None, x_max=None, y_min=None, y_max=None):
     """perform crop on batch of images"""
     return x[:, :, y_min:y_max, x_min:x_max]

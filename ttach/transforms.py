@@ -1,5 +1,5 @@
 from functools import partial
-from typing import Optional, List, Union
+from typing import Optional, List, Union, Tuple
 from . import functional as F
 from .base import DualTransform, ImageOnlyTransform
 
@@ -91,7 +91,6 @@ class Scale(DualTransform):
         interpolation: str = "nearest",
         align_corners: Optional[bool] = None,
     ):
-
         if self.identity_param not in scales:
             scales = [self.identity_param] + list(scales)
         self.interpolation = interpolation
@@ -119,7 +118,60 @@ class Scale(DualTransform):
             )
         return mask
 
-    def apply_deaug_label(self, label, angle=1, **kwargs):
+    def apply_deaug_label(self, label, scale=1, **kwargs):
+        return label
+
+
+class Resize(DualTransform):
+    """Resize images
+
+    Args:
+        sizes (List[Tuple[int, int]): scale factors for spatial image dimensions
+        original_size Tuple(int, int): optional, image original size for deaugmenting mask
+        interpolation (str): one of "nearest"/"lenear" (see more in torch.nn.interpolate)
+        align_corners (bool): see more in torch.nn.interpolate
+    """
+
+    def __init__(
+        self,
+        sizes: List[Tuple[int, int]],
+        original_size: Tuple[int, int] = None,
+        interpolation: str = "nearest",
+        align_corners: Optional[bool] = None,
+    ):
+        if original_size is not None and original_size not in sizes:
+            sizes = [original_size] + list(sizes)
+        self.interpolation = interpolation
+        self.align_corners = align_corners
+        self.original_size = original_size
+
+        super().__init__("size", sizes)
+
+    def apply_aug_image(self, image, size, **kwargs):
+        if size != self.original_size:
+            image = F.resize(
+                image,
+                size,
+                interpolation=self.interpolation,
+                align_corners=self.align_corners,
+            )
+        return image
+
+    def apply_deaug_mask(self, mask, size, **kwargs):
+        if self.original_size is None:
+            raise ValueError(
+                "Provide original image size to make mask backward transformation"
+            )
+        if size != self.original_size:
+            mask = F.resize(
+                mask,
+                self.original_size,
+                interpolation=self.interpolation,
+                align_corners=self.align_corners,
+            )
+        return mask
+
+    def apply_deaug_label(self, label, size=1, **kwargs):
         return label
 
 
@@ -173,7 +225,6 @@ class FiveCrops(ImageOnlyTransform):
     """
 
     def __init__(self, crop_height, crop_width):
-
         crop_functions = (
             partial(F.crop_lt, crop_h=crop_height, crop_w=crop_width),
             partial(F.crop_lb, crop_h=crop_height, crop_w=crop_width),
