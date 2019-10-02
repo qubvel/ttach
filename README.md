@@ -1,6 +1,10 @@
 # TTAch
 Image Test Time Augmentation with PyTorch!
 
+Similar to what Data Augmentation is doing to the training set, the purpose of Test Time Augmentation is to perform random modifications to the test images. Thus, instead of showing the regular, “clean” images, only once to the trained model, we will show it the augmented images several times. We will then average the predictions of each corresponding image and take that as our final guess [[1](https://towardsdatascience.com/test-time-augmentation-tta-and-how-to-perform-it-with-keras-4ac19b67fb4d)].
+![TTA](https://preview.ibb.co/kH61v0/pipeline.png)
+
+
 ## Quick start
 
 #####  Segmentation model wrapping:
@@ -17,7 +21,7 @@ tta_model = tta.ClassificationTTAWrapper(model, tta.aliases.five_crops_transform
 #####  Custom transform:
 ```python
 # defined 2 * 2 * 3 * 3 = 36 augmentations !
-transform = tta.Compose(
+transforms = tta.Compose(
     [
         tta.HorizontalFlip(),
         tta.Rotate90(angles=[0, 180]),
@@ -26,24 +30,24 @@ transform = tta.Compose(
     ]
 )
 
-tta_model = tta.SegmentationTTAWrapper(model, transform)
+tta_model = tta.SegmentationTTAWrapper(model, transforms)
 ```
 ##### Custom model (multi-input / multi-output)
 ```python
 # Example how to process ONE batch on images with TTA
 # Here `image`/`mask` are 4D tensors (B, C, H, W), `label` is 2D tensor (B, N)
 
-for augmenter in transform: # custom transform or e.g. tta.aliases.d4_transform() 
+for transformer in transforms: # custom transforms or e.g. tta.aliases.d4_transform() 
     
     # augment image
-    augmented_image = augmenter.augment_image(image)
+    augmented_image = transformer.augment_image(image)
     
     # pass to model
     model_output = model(augmented_image, another_input_data)
     
     # reverse augmentation for mask and label
-    deaug_mask = augmenter.deaugment_mask(model_output['mask'])
-    deaug_label = augmenter.deaugment_label(model_output['label'])
+    deaug_mask = transformer.deaugment_mask(model_output['mask'])
+    deaug_label = transformer.deaugment_label(model_output['label'])
     
     # save results
     labels.append(deaug_mask)
@@ -55,23 +59,33 @@ mask = mean(masks)
 ```
  
 ## Transforms
- 
-  - HorizontalFlip()
-  - VerticalFlip()
-  - Scale(scales=[1, 2, 3], intepolation="nearest")
-  - Rotate90(angles=[0, 90, 180, 270])
-  - Add(values=[1, 2, 20, -20])
-  - Multiply(factors=[0.9, 1, 1.3])
-  - FiveCrops(crop_height, crop_width)
+  
+| Transform      | Parameters                | Values                            |
+|----------------|:-------------------------:|:---------------------------------:|
+| HorizontalFlip | -                         | -                                 |
+| VerticalFlip   | -                         | -                                 |
+| Rotate90       | angles                    | List\[0, 90, 180, 270]            |
+| Scale          | scales<br>interpolation   | List\[float]<br>"nearest"/"linear"|
+| Add            | values                    | List\[float]                      |
+| Multiply       | factors                   | List\[float]                      |
+| FiveCrops      | crop_height<br>crop_width | int<br>int                        |
  
 ## Aliases
 
-  - flip_transform
-  - hflip_transform
-  - d4_transform
-  - multiscale_transform
-  - five_crop_transform
-  - ten_crop_transform
+  - flip_transform (horizontal + vertical flips)
+  - hflip_transform (horizontal flip)
+  - d4_transform (flips + rotation 0, 90, 180, 270)
+  - multiscale_transform (scale transform, take scales as input parameter)
+  - five_crop_transform (corner crops + center crop)
+  - ten_crop_transform (five crops + five crops on horizontal flip)
+  
+## Merge modes
+ - mean
+ - gmean (geometric mean)
+ - sum
+ - max
+ - min
+ - tsharpen ([temperature sharpen](https://www.kaggle.com/c/severstal-steel-defect-detection/discussion/107716#latest-624046) with t=0.5)
 
 ## Run tests
 

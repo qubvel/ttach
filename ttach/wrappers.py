@@ -24,12 +24,12 @@ class SegmentationTTAWrapper(nn.Module):
     ) -> Union[torch.Tensor, Mapping[str, torch.Tensor]]:
         merger = Merger(type=self.merge_mode, n=len(self.transforms))
 
-        for augmenter in self.transforms:
-            augmented_image = augmenter.augment_image(image)
+        for transformer in self.transforms:
+            augmented_image = transformer.augment_image(image)
             augmented_output = self.model(augmented_image, *args)
             if self.output_key is not None:
                 augmented_output = augmented_output[self.output_key]
-            deaugmented_output = augmenter.deaugment_mask(augmented_output)
+            deaugmented_output = transformer.deaugment_mask(augmented_output)
             merger.append(deaugmented_output)
 
         result = merger.result
@@ -58,12 +58,12 @@ class ClassificationTTAWrapper(nn.Module):
     ) -> Union[torch.Tensor, Mapping[str, torch.Tensor]]:
         merger = Merger(type=self.merge_mode, n=len(self.transforms))
 
-        for augmenter in self.transforms:
-            augmented_image = augmenter.augment_image(image)
+        for transformer in self.transforms:
+            augmented_image = transformer.augment_image(image)
             augmented_output = self.model(augmented_image, *args)
             if self.output_label_key is not None:
                 augmented_output = augmented_output[self.output_label_key]
-            deaugmented_output = augmenter.deaugment_label(augmented_output)
+            deaugmented_output = transformer.deaugment_label(augmented_output)
             merger.append(deaugmented_output)
 
         result = merger.result
