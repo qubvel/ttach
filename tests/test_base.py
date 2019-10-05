@@ -1,6 +1,7 @@
 import pytest
 import torch
 import ttach as tta
+import ttach.mergers
 
 
 def test_compose_1():
@@ -42,7 +43,7 @@ def test_compose_1():
 def test_merger(case):
     merge_type, output = case
     input = [1.0, 0.0, 0.5]
-    merger = tta.base.Merger(type=merge_type, n=len(input))
+    merger = ttach.mergers.Merger(type=merge_type, n=len(input))
     for i in input:
         merger.append(torch.tensor(i))
     assert torch.allclose(merger.result, torch.tensor(output))

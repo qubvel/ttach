@@ -2,7 +2,8 @@ import torch
 import torch.nn as nn
 from typing import Optional, Mapping, Union
 
-from .base import Merger, Compose
+from .base import Compose
+from .mergers import Merger
 
 
 class SegmentationTTAWrapper(nn.Module):
@@ -91,3 +92,31 @@ class ClassificationTTAWrapper(nn.Module):
             result = {self.output_key: result}
 
         return result
+
+
+class FasterRCNNWrapper:
+
+    def __init__(
+        self,
+        model: nn.Module,
+        transforms: Compose,
+    ):
+        super().__init__()
+        self.model = model
+        self.transforms = transforms
+
+    def forward(self, x):
+
+        out = None
+
+        for transformer in self.transforms:
+            augmented_image = transformer.augment_image(x)
+            model_output = self.model(augmented_image)
+
+            if out is None:
+                out = model_output
+            else:
+                for single_image_ouput in (model_output
+                    for key, tensor in single_image_ouput
+
+
