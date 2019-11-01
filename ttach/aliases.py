@@ -18,7 +18,6 @@ def d4_transform():
     return Compose(
         [
             tta.HorizontalFlip(),
-            tta.VerticalFlip(),
             tta.Rotate90(angles=[0, 90, 180, 270]),
         ]
     )
