@@ -12,7 +12,12 @@ Similar to what Data Augmentation is doing to the training set, the purpose of T
              |           # output batch of masks/labels
            Output
 ```
-
+## Table of Contents
+1. [Quick Start](#quick-start)
+2. [Transforms](#transforms)
+3. [Aliases](#aliases)
+4. [Merge modes](#merge-modes)
+5. [Installation](#installation)
 
 ## Quick start
 
@@ -96,6 +101,16 @@ mask = mean(masks)
  - max
  - min
  - tsharpen ([temperature sharpen](https://www.kaggle.com/c/severstal-steel-defect-detection/discussion/107716#latest-624046) with t=0.5)
+ 
+## Installation
+PyPI:
+```bash
+$ pip install ttach
+```
+Source:
+```bash
+$ pip install git+https://github.com/qubvel/ttach
+```
 
 ## Run tests
 
