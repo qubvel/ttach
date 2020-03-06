@@ -28,7 +28,7 @@ tta_model = tta.SegmentationTTAWrapper(model, tta.aliases.d4_transform(), merge_
 ```
 #####  Classification model wrapping:
 ```python
-tta_model = tta.ClassificationTTAWrapper(model, tta.aliases.five_crops_transform())
+tta_model = tta.ClassificationTTAWrapper(model, tta.aliases.five_crop_transform())
 ```
 
 ## Advanced Examples
