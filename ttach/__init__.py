@@ -1,6 +1,7 @@
 from .wrappers import (
     SegmentationTTAWrapper,
     ClassificationTTAWrapper,
+    KeypointsTTAWrapper
 )
 from .base import Compose
 

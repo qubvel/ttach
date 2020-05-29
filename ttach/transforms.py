@@ -9,8 +9,9 @@ class HorizontalFlip(DualTransform):
 
     identity_param = False
 
-    def __init__(self):
+    def __init__(self, original_size=None):
         super().__init__("apply", [False, True])
+        self.original_size = original_size
 
     def apply_aug_image(self, image, apply=False, **kwargs):
         if apply:
@@ -25,14 +26,24 @@ class HorizontalFlip(DualTransform):
     def apply_deaug_label(self, label, apply=False, **kwargs):
         return label
 
+    def apply_deaug_keypoints(self, keypoints, apply=False, **kwargs):
+        if self.original_size is None:
+            raise ValueError(
+                "Provide original image size to make keypoints backward transformation"
+            )
+        if apply:
+            keypoints = F.keypoints_hflip(keypoints, *self.original_size)
+        return keypoints
+
 
 class VerticalFlip(DualTransform):
     """Flip images vertically (up->down)"""
 
     identity_param = False
 
-    def __init__(self):
+    def __init__(self, original_size=None):
         super().__init__("apply", [False, True])
+        self.original_size = original_size
 
     def apply_aug_image(self, image, apply=False, **kwargs):
         if apply:
@@ -47,6 +58,16 @@ class VerticalFlip(DualTransform):
     def apply_deaug_label(self, label, apply=False, **kwargs):
         return label
 
+    def apply_deaug_keypoints(self, keypoints, apply=False, **kwargs):
+        if self.original_size is None:
+            raise ValueError(
+                "Provide original image size to make keypoints backward transformation"
+            )
+
+        if apply:
+            keypoints = F.keypoints_vflip(keypoints, *self.original_size)
+        return keypoints
+
 
 class Rotate90(DualTransform):
     """Rotate images 0/90/180/270 degrees
@@ -57,11 +78,12 @@ class Rotate90(DualTransform):
 
     identity_param = 0
 
-    def __init__(self, angles: List[int]):
+    def __init__(self, angles: List[int], original_size=None):
         if self.identity_param not in angles:
             angles = [self.identity_param] + list(angles)
 
         super().__init__("angle", angles)
+        self.original_size = original_size
 
     def apply_aug_image(self, image, angle=0, **kwargs):
         k = angle // 90 if angle >= 0 else (angle + 360) // 90
@@ -72,6 +94,20 @@ class Rotate90(DualTransform):
 
     def apply_deaug_label(self, label, angle=0, **kwargs):
         return label
+
+    def apply_deaug_keypoints(self, keypoints, angle=0, **kwargs):
+        if self.original_size is None:
+            raise ValueError(
+                "Provide original image size to make keypoints backward transformation"
+            )
+        if self.original_size[0] != self.original_size[1]:
+            raise ValueError(
+                "Size must be square to make keypoints backward transformation"
+            )
+
+        angle *= -1
+        k = angle // 90 if angle >= 0 else (angle + 360) // 90
+        return F.keypoints_rot90(keypoints, *self.original_size, k=k)
 
 
 class Scale(DualTransform):
@@ -120,6 +156,11 @@ class Scale(DualTransform):
 
     def apply_deaug_label(self, label, scale=1, **kwargs):
         return label
+
+    def apply_deaug_keypoints(self, keypoints, scale=1, **kwargs):
+        if scale != self.identity_param:
+            keypoints = F.keypoints_scale(keypoints, 1 / scale)
+        return keypoints
 
 
 class Resize(DualTransform):
@@ -173,6 +214,9 @@ class Resize(DualTransform):
 
     def apply_deaug_label(self, label, size=1, **kwargs):
         return label
+
+    def apply_deaug_keypoints(self, keypoints, size, **kwargs):
+        raise ValueError("`Resize` augmentation is not suitable for keypoints!")
 
 
 class Add(ImageOnlyTransform):
@@ -239,3 +283,6 @@ class FiveCrops(ImageOnlyTransform):
 
     def apply_deaug_mask(self, mask, **kwargs):
         raise ValueError("`FiveCrop` augmentation is not suitable for mask!")
+
+    def apply_deaug_keypoints(self, keypoints, **kwargs):
+        raise ValueError("`FiveCrop` augmentation is not suitable for keypoints!")

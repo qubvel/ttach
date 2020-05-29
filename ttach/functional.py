@@ -96,3 +96,46 @@ def center_crop(x, crop_h, crop_w):
     x_max = center_w + half_crop_w + crop_w % 2
 
     return x[:, :, y_min:y_max, x_min:x_max]
+
+
+def _disassemble_keypoints(keypoints):
+    x = keypoints[..., 0]
+    y = keypoints[..., 1]
+    return x, y
+
+
+def _assemble_keypoints(x, y):
+    return torch.stack([x, y], dim=-1)
+
+
+def keypoints_hflip(keypoints, image_height, image_width):
+    x, y = _disassemble_keypoints(keypoints)
+    return _assemble_keypoints(image_width - 1 - x, y)
+
+
+def keypoints_vflip(keypoints, image_height, image_width):
+    x, y = _disassemble_keypoints(keypoints)
+    return _assemble_keypoints(x, image_height - 1 - y)
+
+
+def keypoints_rot90(keypoints, image_height, image_width, k=1):
+
+    if k not in {0, 1, 2, 3}:
+        raise ValueError("Parameter k must be in [0:3]")
+    if k == 0:
+        return keypoints
+    x, y = _disassemble_keypoints(keypoints)
+
+    if k == 1:
+        xy = [y, image_width - 1 - x]
+    elif k == 2:
+        xy = [image_width - 1 - x, image_height - 1 - y]
+    elif k == 3:
+        xy = [image_height - 1 - y, x]
+
+    return _assemble_keypoints(*xy)
+
+
+def keypoints_scale(keypoints, scale_factor=1):
+    x, y = _disassemble_keypoints(keypoints)
+    return _assemble_keypoints(x * scale_factor, y * scale_factor)
