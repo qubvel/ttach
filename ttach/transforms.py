@@ -138,9 +138,6 @@ class Scale(DualTransform):
 
     def apply_deaug_keypoints(self, keypoints, scale=1, **kwargs):
         return keypoints
-        # if scale != self.identity_param:
-        #     keypoints = F.keypoints_scale(keypoints, 1 / scale)
-        # return keypoints
 
 
 class Resize(DualTransform):
@@ -195,8 +192,8 @@ class Resize(DualTransform):
     def apply_deaug_label(self, label, size=1, **kwargs):
         return label
 
-    def apply_deaug_keypoints(self, keypoints, size, **kwargs):
-        raise ValueError("`Resize` augmentation is not suitable for keypoints!") # TODO?
+    def apply_deaug_keypoints(self, keypoints, size=1, **kwargs):
+        return keypoints
 
 
 class Add(ImageOnlyTransform):

@@ -134,8 +134,3 @@ def keypoints_rot90(keypoints, k=1):
         xy = [1. - y, x]
 
     return _assemble_keypoints(*xy)
-
-
-# def keypoints_scale(keypoints, scale_factor=1):
-#     x, y = _disassemble_keypoints(keypoints)
-#     return _assemble_keypoints(x * scale_factor, y * scale_factor)
