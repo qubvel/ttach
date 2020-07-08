@@ -108,17 +108,17 @@ def _assemble_keypoints(x, y):
     return torch.stack([x, y], dim=-1)
 
 
-def keypoints_hflip(keypoints, image_height, image_width):
+def keypoints_hflip(keypoints):
     x, y = _disassemble_keypoints(keypoints)
-    return _assemble_keypoints(image_width - 1 - x, y)
+    return _assemble_keypoints(1. - x, y)
 
 
-def keypoints_vflip(keypoints, image_height, image_width):
+def keypoints_vflip(keypoints):
     x, y = _disassemble_keypoints(keypoints)
-    return _assemble_keypoints(x, image_height - 1 - y)
+    return _assemble_keypoints(x, 1. - y)
 
 
-def keypoints_rot90(keypoints, image_height, image_width, k=1):
+def keypoints_rot90(keypoints, k=1):
 
     if k not in {0, 1, 2, 3}:
         raise ValueError("Parameter k must be in [0:3]")
@@ -127,15 +127,15 @@ def keypoints_rot90(keypoints, image_height, image_width, k=1):
     x, y = _disassemble_keypoints(keypoints)
 
     if k == 1:
-        xy = [y, image_width - 1 - x]
+        xy = [y, 1. - x]
     elif k == 2:
-        xy = [image_width - 1 - x, image_height - 1 - y]
+        xy = [1. - x, 1. - y]
     elif k == 3:
-        xy = [image_height - 1 - y, x]
+        xy = [1. - y, x]
 
     return _assemble_keypoints(*xy)
 
 
-def keypoints_scale(keypoints, scale_factor=1):
-    x, y = _disassemble_keypoints(keypoints)
-    return _assemble_keypoints(x * scale_factor, y * scale_factor)
+# def keypoints_scale(keypoints, scale_factor=1):
+#     x, y = _disassemble_keypoints(keypoints)
+#     return _assemble_keypoints(x * scale_factor, y * scale_factor)

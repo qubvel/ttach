@@ -45,12 +45,12 @@ def test_label_is_same(transform):
 @pytest.mark.parametrize(
     "transform",
     [
-        tta.HorizontalFlip(original_size=(224, 400)),
-        tta.VerticalFlip(original_size=(224, 400))
+        tta.HorizontalFlip(),
+        tta.VerticalFlip()
     ],
 )
 def test_flip_keypoints(transform):
-    keypoints = torch.tensor([[10, 10], [10, 200], [390, 10], [390, 200], [100, 100]])
+    keypoints = torch.tensor([[0.1, 0.1], [0.1, 0.9], [0.9, 0.1], [0.9, 0.9], [0.4, 0.3]])
     for p in transform.params:
         aug = transform.apply_deaug_keypoints(keypoints.detach().clone(), **{transform.pname: p})
         deaug = transform.apply_deaug_keypoints(aug, **{transform.pname: p})
@@ -60,11 +60,11 @@ def test_flip_keypoints(transform):
 @pytest.mark.parametrize(
     "transform",
     [
-        tta.Rotate90(angles=[0, 90, 180, 270], original_size=(400, 400))
+        tta.Rotate90(angles=[0, 90, 180, 270])
     ],
 )
 def test_rotate90_keypoints(transform):
-    keypoints = torch.tensor([[10, 10], [10, 200], [390, 10], [390, 200], [100, 100]])
+    keypoints = torch.tensor([[0.1, 0.1], [0.1, 0.9], [0.9, 0.1], [0.9, 0.9], [0.4, 0.3]])
     for p in transform.params:
         aug = transform.apply_deaug_keypoints(keypoints.detach().clone(), **{transform.pname: p})
         deaug = transform.apply_deaug_keypoints(aug, **{transform.pname: -p})
