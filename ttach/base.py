@@ -25,6 +25,9 @@ class BaseTransform:
     def apply_deaug_label(self, label, *args, **params):
         raise NotImplementedError
 
+    def apply_deaug_keypoints(self, keypoints, *args, **params):
+        raise NotImplementedError
+
 
 class ImageOnlyTransform(BaseTransform):
 
@@ -33,6 +36,9 @@ class ImageOnlyTransform(BaseTransform):
 
     def apply_deaug_label(self, label, *args, **params):
         return label
+
+    def apply_deaug_keypoints(self, keypoints, *args, **params):
+        return keypoints
 
 
 class DualTransform(BaseTransform):
@@ -59,10 +65,12 @@ class Transformer:
             image_pipeline: Chain,
             mask_pipeline: Chain,
             label_pipeline: Chain,
+            keypoints_pipeline: Chain
     ):
         self.image_pipeline = image_pipeline
         self.mask_pipeline = mask_pipeline
         self.label_pipeline = label_pipeline
+        self.keypoints_pipeline = keypoints_pipeline
 
     def augment_image(self, image):
         return self.image_pipeline(image)
@@ -72,6 +80,9 @@ class Transformer:
 
     def deaugment_label(self, label):
         return self.label_pipeline(label)
+
+    def deaugment_keypoints(self, keypoints):
+        return self.keypoints_pipeline(keypoints)
 
 
 class Compose:
@@ -93,10 +104,13 @@ class Compose:
                                       for t, p in zip(self.deaug_transforms, deaug_params)])
             label_deaug_chain = Chain([partial(t.apply_deaug_label, **{t.pname: p})
                                        for t, p in zip(self.deaug_transforms, deaug_params)])
+            keypoints_deaug_chain = Chain([partial(t.apply_deaug_keypoints, **{t.pname: p})
+                                           for t, p in zip(self.deaug_transforms, deaug_params)])
             yield Transformer(
                 image_pipeline=image_aug_chain,
                 mask_pipeline=mask_deaug_chain,
                 label_pipeline=label_deaug_chain,
+                keypoints_pipeline=keypoints_deaug_chain
             )
 
     def __len__(self) -> int:

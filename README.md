@@ -31,6 +31,12 @@ tta_model = tta.SegmentationTTAWrapper(model, tta.aliases.d4_transform(), merge_
 tta_model = tta.ClassificationTTAWrapper(model, tta.aliases.five_crop_transform())
 ```
 
+#####  Keypoints model wrapping:
+```python
+tta_model = tta.KeypointsTTAWrapper(model, tta.aliases.flip_transform(), scaled=True)
+```
+**Note**: the model must return keypoints in the format `torch([x1, y1, ..., xn, yn])`
+
 ## Advanced Examples
 #####  Custom transform:
 ```python

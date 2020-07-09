@@ -42,6 +42,35 @@ def test_label_is_same(transform):
         assert torch.allclose(aug, deaug)
 
 
+@pytest.mark.parametrize(
+    "transform",
+    [
+        tta.HorizontalFlip(),
+        tta.VerticalFlip()
+    ],
+)
+def test_flip_keypoints(transform):
+    keypoints = torch.tensor([[0.1, 0.1], [0.1, 0.9], [0.9, 0.1], [0.9, 0.9], [0.4, 0.3]])
+    for p in transform.params:
+        aug = transform.apply_deaug_keypoints(keypoints.detach().clone(), **{transform.pname: p})
+        deaug = transform.apply_deaug_keypoints(aug, **{transform.pname: p})
+        assert torch.allclose(keypoints, deaug)
+
+
+@pytest.mark.parametrize(
+    "transform",
+    [
+        tta.Rotate90(angles=[0, 90, 180, 270])
+    ],
+)
+def test_rotate90_keypoints(transform):
+    keypoints = torch.tensor([[0.1, 0.1], [0.1, 0.9], [0.9, 0.1], [0.9, 0.9], [0.4, 0.3]])
+    for p in transform.params:
+        aug = transform.apply_deaug_keypoints(keypoints.detach().clone(), **{transform.pname: p})
+        deaug = transform.apply_deaug_keypoints(aug, **{transform.pname: -p})
+        assert torch.allclose(keypoints, deaug)
+
+
 def test_add_transform():
     transform = tta.Add(values=[-1, 0, 1])
     a = torch.arange(20).reshape(1, 1, 4, 5).float()

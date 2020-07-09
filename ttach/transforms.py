@@ -25,6 +25,11 @@ class HorizontalFlip(DualTransform):
     def apply_deaug_label(self, label, apply=False, **kwargs):
         return label
 
+    def apply_deaug_keypoints(self, keypoints, apply=False, **kwargs):
+        if apply:
+            keypoints = F.keypoints_hflip(keypoints)
+        return keypoints
+
 
 class VerticalFlip(DualTransform):
     """Flip images vertically (up->down)"""
@@ -46,6 +51,11 @@ class VerticalFlip(DualTransform):
 
     def apply_deaug_label(self, label, apply=False, **kwargs):
         return label
+
+    def apply_deaug_keypoints(self, keypoints, apply=False, **kwargs):
+        if apply:
+            keypoints = F.keypoints_vflip(keypoints)
+        return keypoints
 
 
 class Rotate90(DualTransform):
@@ -72,6 +82,11 @@ class Rotate90(DualTransform):
 
     def apply_deaug_label(self, label, angle=0, **kwargs):
         return label
+
+    def apply_deaug_keypoints(self, keypoints, angle=0, **kwargs):
+        angle *= -1
+        k = angle // 90 if angle >= 0 else (angle + 360) // 90
+        return F.keypoints_rot90(keypoints, k=k)
 
 
 class Scale(DualTransform):
@@ -120,6 +135,9 @@ class Scale(DualTransform):
 
     def apply_deaug_label(self, label, scale=1, **kwargs):
         return label
+
+    def apply_deaug_keypoints(self, keypoints, scale=1, **kwargs):
+        return keypoints
 
 
 class Resize(DualTransform):
@@ -173,6 +191,9 @@ class Resize(DualTransform):
 
     def apply_deaug_label(self, label, size=1, **kwargs):
         return label
+
+    def apply_deaug_keypoints(self, keypoints, size=1, **kwargs):
+        return keypoints
 
 
 class Add(ImageOnlyTransform):
@@ -239,3 +260,6 @@ class FiveCrops(ImageOnlyTransform):
 
     def apply_deaug_mask(self, mask, **kwargs):
         raise ValueError("`FiveCrop` augmentation is not suitable for mask!")
+
+    def apply_deaug_keypoints(self, keypoints, **kwargs):
+        raise ValueError("`FiveCrop` augmentation is not suitable for keypoints!")
