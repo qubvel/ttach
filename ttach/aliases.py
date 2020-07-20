@@ -10,7 +10,7 @@ def hflip_transform():
     return Compose([tta.HorizontalFlip()])
 
 
-def vlip_transform():
+def vflip_transform():
     return Compose([tta.VerticalFlip()])
 
 
