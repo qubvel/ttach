@@ -10,3 +10,5 @@ from .transforms import (
 )
 
 from . import aliases
+
+from .__version__ import __version__
