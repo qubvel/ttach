@@ -77,14 +77,15 @@ class ClassificationTTAWrapper(nn.Module):
         self, image: torch.Tensor, *args
     ) -> Union[torch.Tensor, Mapping[str, torch.Tensor]]:
         merger = Merger(type=self.merge_mode, n=len(self.transforms))
-
-        for transformer in self.transforms:
-            augmented_image = transformer.augment_image(image)
-            augmented_output = self.model(augmented_image, *args)
-            if self.output_key is not None:
-                augmented_output = augmented_output[self.output_key]
-            deaugmented_output = transformer.deaugment_label(augmented_output)
-            merger.append(deaugmented_output)
+        
+        with torch.no_grad():
+            for transformer in self.transforms:
+                augmented_image = transformer.augment_image(image)
+                augmented_output = self.model(augmented_image, *args)
+                if self.output_key is not None:
+                    augmented_output = augmented_output[self.output_key]
+                deaugmented_output = transformer.deaugment_label(augmented_output)
+                merger.append(deaugmented_output)
 
         result = merger.result
         if self.output_key is not None:
