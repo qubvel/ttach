@@ -1,14 +1,23 @@
 from .wrappers import (
     SegmentationTTAWrapper,
     ClassificationTTAWrapper,
-    KeypointsTTAWrapper
+    KeypointsTTAWrapper,
 )
 from .base import Compose
 
 from .transforms import (
-    HorizontalFlip, VerticalFlip, Rotate90, Scale, Add, Multiply, FiveCrops, Resize
+    HorizontalFlip,
+    VerticalFlip,
+    Rotate90,
+    Scale,
+    Add,
+    Multiply,
+    FiveCrops,
+    Resize,
 )
 
 from . import aliases
+
+from . import utils
 
 from .__version__ import __version__
