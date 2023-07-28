@@ -3,6 +3,13 @@ from typing import Optional, List, Union, Tuple
 from . import functional as F
 from .base import DualTransform, ImageOnlyTransform
 
+from typing import List
+
+import numpy as np
+
+import torch
+from torchvision.transforms import functional as TVF
+
 
 class HorizontalFlip(DualTransform):
     """Flip images horizontally (left->right)"""
@@ -206,7 +213,6 @@ class Add(ImageOnlyTransform):
     identity_param = 0
 
     def __init__(self, values: List[float]):
-
         if self.identity_param not in values:
             values = [self.identity_param] + list(values)
         super().__init__("value", values)
@@ -242,7 +248,7 @@ class FiveCrops(ImageOnlyTransform):
 
     Args:
         crop_height (int): crop height in pixels
-        crop_width (int): crop width in pixels 
+        crop_width (int): crop width in pixels
     """
 
     def __init__(self, crop_height, crop_width):
@@ -263,3 +269,192 @@ class FiveCrops(ImageOnlyTransform):
 
     def apply_deaug_keypoints(self, keypoints, **kwargs):
         raise ValueError("`FiveCrop` augmentation is not suitable for keypoints!")
+
+
+class RandomRotation(DualTransform):
+    """Rotate the image by a random angle. This can be a destructive augmentation, so you have to be carefull when creting the final ensemble prediction.
+    If the image is torch Tensor, it is expected
+    to have [..., H, W] shape, where ... means an arbitrary number of leading dimensions.
+
+    Args:
+        degree int: The range of degree to select the angle (-degree, +degree).
+
+    """
+
+    identity_param = 0
+
+    def __init__(
+        self,
+        degree: int,
+    ):
+        self.degree = degree
+        self.angle = float(
+            torch.empty(1).uniform_(float(-degree), float(degree)).item()
+        )
+
+        angles = (
+            [self.angle]
+            if self.identity_param == self.angle
+            else [self.identity_param, self.angle]
+        )
+
+        super().__init__("angle", angles)
+
+    def apply_aug_image(
+        self,
+        image,
+        angle=0,
+        interpolation=TVF.InterpolationMode.NEAREST,
+        expand=False,
+        center=None,
+        fill=0,
+        **kwargs,
+    ):
+        return TVF.rotate(image, angle, interpolation, expand, center, fill)
+
+    def apply_deaug_mask(self, mask, angle=0, **kwargs):
+        return self.apply_aug_image(mask, -angle)
+
+    def apply_deaug_label(self, label, angle=0, **kwargs):
+        return self.apply_aug_image(label, -angle)
+
+
+class RandomPerspective(DualTransform):
+    """Performs a random perspective transformation of the given image with a given probability.
+    If the image is torch Tensor, it is expected
+    to have [..., H, W] shape, where ... means an arbitrary number of leading dimensions.
+
+    Args:
+        distortion_scale (float): argument to control the degree of distortion and ranges from 0 to 1.
+            Default is 0.5.
+
+    """
+
+    identity_param = 0
+
+    def __init__(self, distortion_scale=0.5):
+        self.distortion_scale = distortion_scale
+
+        distortion_scales = (
+            [self.distortion_scale]
+            if self.identity_param == self.distortion_scale
+            else [self.identity_param, self.distortion_scale]
+        )
+
+        self.topleft_factors = [
+            float(torch.empty(1).uniform_(0.0, 1.0).item()),
+            float(torch.empty(1).uniform_(0.0, 1.0).item()),
+        ]
+        self.topright_factors = [
+            float(torch.empty(1).uniform_(0.0, 1.0).item()),
+            float(torch.empty(1).uniform_(0.0, 1.0).item()),
+        ]
+        self.botright_factors = [
+            float(torch.empty(1).uniform_(0.0, 1.0).item()),
+            float(torch.empty(1).uniform_(0.0, 1.0).item()),
+        ]
+        self.botleft_factors = [
+            float(torch.empty(1).uniform_(0.0, 1.0).item()),
+            float(torch.empty(1).uniform_(0.0, 1.0).item()),
+        ]
+
+        super().__init__("distortion_scale", distortion_scales)
+
+    def _get_points(self, image, distortion_scale):
+        _, height, width = TVF.get_dimensions(image)
+
+        half_height = height // 2
+        half_width = width // 2
+
+        startpoints = [
+            [0, 0],
+            [width - 1, 0],
+            [width - 1, height - 1],
+            [0, height - 1],
+        ]
+
+        endpoints = [
+            np.multiply(
+                self.topleft_factors,
+                [
+                    half_width * distortion_scale,
+                    half_height * distortion_scale,
+                ],
+            )
+            .astype("int")
+            .tolist(),
+            np.add(
+                [width, 0],
+                np.multiply(
+                    self.topright_factors,
+                    [
+                        -half_width * distortion_scale,
+                        half_height * distortion_scale,
+                    ],
+                ),
+            )
+            .astype("int")
+            .tolist(),
+            np.add(
+                [width, height],
+                np.multiply(
+                    self.botright_factors,
+                    [
+                        -half_width * distortion_scale,
+                        -half_height * distortion_scale,
+                    ],
+                ),
+            )
+            .astype("int")
+            .tolist(),
+            np.add(
+                [0, height],
+                np.multiply(
+                    self.botleft_factors,
+                    [
+                        half_width * distortion_scale,
+                        -half_height * distortion_scale,
+                    ],
+                ),
+            )
+            .astype("int")
+            .tolist(),
+        ]
+
+        return startpoints, endpoints
+
+    def apply_aug_image(
+        self,
+        image,
+        distortion_scale,
+        interpolation=TVF.InterpolationMode.BILINEAR,
+        fill=0,
+        **kwargs,
+    ):
+        startpoints, endpoints = self._get_points(image, distortion_scale)
+
+        return TVF.perspective(image, startpoints, endpoints, interpolation, fill)
+
+    def apply_deaug_mask(
+        self,
+        image,
+        distortion_scale,
+        interpolation=TVF.InterpolationMode.BILINEAR,
+        fill=0,
+        **kwargs,
+    ):
+        startpoints, endpoints = self._get_points(image, distortion_scale)
+
+        return TVF.perspective(image, endpoints, startpoints, interpolation, fill)
+
+    def apply_deaug_label(
+        self,
+        image,
+        distortion_scale,
+        interpolation=TVF.InterpolationMode.BILINEAR,
+        fill=0,
+        **kwargs,
+    ):
+        startpoints, endpoints = self._get_points(image, distortion_scale)
+
+        return TVF.perspective(image, endpoints, startpoints, interpolation, fill)
